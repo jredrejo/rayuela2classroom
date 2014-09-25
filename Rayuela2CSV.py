@@ -22,7 +22,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this script. If not, see <http://www.gnu.org/licenses/>.
 #
-##############################################################################
+# #############################################################################
 
 import os
 import sys
@@ -30,7 +30,7 @@ import xml.dom.minidom
 
 
 class Users(object):
-    def __init__(self,name,surname,nif,user,password,password2,classrooms):
+    def __init__(self, name, surname, nif, user, password, password2, classrooms):
         self.type = type
         self.name = name
         self.surname = surname
@@ -39,15 +39,17 @@ class Users(object):
         self.password = password
         self.password2 = password2
         self.classrooms = classrooms
-        if  self.classrooms.__class__.__name__ == 'str': self.classrooms=[classrooms]
+        if self.classrooms.__class__.__name__ == 'str': self.classrooms = [classrooms]
 
 
 class Rayuela(object):
     def __init__(self, archivo):
         self.usuarios = []
         self.dni_usuarios = []
-        self.logins = []
+        self.logins = {}
         self.archivo = archivo
+        self.aulas = {}
+
 
 
     def asegura_codigos(self, cadena):
@@ -104,11 +106,11 @@ class Rayuela(object):
         else:
             nuevo_login = login
 
-        if nuevo_login not in self.logins:
+        if nuevo_login not in self.logins.keys():
             return nuevo_login
         else:
             i = 2
-            while nuevo_login in self.logins:
+            while nuevo_login in self.logins.keys():
                 nuevo_login = login + "%02d" % (i)
                 i += 1
             return nuevo_login
@@ -142,7 +144,7 @@ class Rayuela(object):
                         if len(usuario["segundo-apellido"]) > 0:
                             login += usuario["segundo-apellido"][0].lower().strip()
                     usuario["login"] = self.chk_username(login)
-                self.logins.append(usuario["login"])
+                self.logins[usuario["login"]] = usuario
 
             else:  #sin nie ni dni, no podemos gestionarlo
                 self.usuarios.remove(usuario)
@@ -214,41 +216,45 @@ class Rayuela(object):
 
     def crea_usuarios(self):
         """Da de alta en ldap los usuarios que están en el listado"""
-        lista=[]
+        lista = []
 
         for usuario in self.usuarios:
-            surname=usuario['primer-apellido'] + ' ' + usuario['segundo-apellido']
-            nuevo=Users(usuario['nombre'],surname.strip(),
-                usuario['dni'],usuario['login'],usuario['passwd'],usuario['passwd'],'')
-            lista.append((usuario['login'],usuario['passwd'],usuario['nombre'],surname))
+            surname = usuario['primer-apellido'] + ' ' + usuario['segundo-apellido']
+            nuevo = Users(usuario['nombre'], surname.strip(),
+                          usuario['dni'], usuario['login'], usuario['passwd'], usuario['passwd'], '')
+            lista.append((usuario['login'], usuario['passwd'], usuario['nombre'], surname))
 
         return lista
 
 
     def gestiona_archivo(self):
         """Función principal que a partir del archivo hace todo en ldap"""
-
-        aulas = {}
-
         self.parsea_archivo(self.archivo)
-        aulas = self.lista_grupos(self.usuarios, "grupo")
-        total=self.crea_usuarios()
-        return (total, aulas)
+        self.aulas = self.lista_grupos(self.usuarios, "grupo")
+        total = self.crea_usuarios()
+        return (total, self.aulas)
+
+    def usuarios_grupo(self, grupo):
+        import csv
+        myfile = open('salida.csv', 'wb')
+        wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
+        wr.writerow("First Name,Last Name,Email Address,Password".split(","))
+        for usuario in self.aulas[grupo]:
+            datos=self.logins[usuario]
+            surname = datos['primer-apellido'] + ' ' + datos['segundo-apellido']
+            wr.writerow([datos['nombre'],surname,"%s@santiagoapostol.net" % datos['login'],datos['passwd']])
 
 
 if __name__ == '__main__':
     archivo = sys.argv[1]
-    rayuela = Rayuela( archivo)
+    rayuela = Rayuela(archivo)
     todos = rayuela.gestiona_archivo()
 
-    #print todos[0]
-    #print todos[1].keys()
-    #print todos[1]['1PCIA']
     print "Esta es la lista de grupos, escribe el que deseas generar:"
     print todos[1].keys()
-    grupo=raw_input()
+    grupo = raw_input()
     if grupo not in todos[1]:
         print "error en el nombre del grupo"
         sys.exit(1)
     else:
-        print todos[1][grupo]
+        rayuela.usuarios_grupo(grupo)
