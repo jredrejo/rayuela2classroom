@@ -51,7 +51,6 @@ class Rayuela(object):
         self.aulas = {}
 
 
-
     def asegura_codigos(self, cadena):
         """Quita caracteres no válidos para los nombres de login
         de los usuarios"""
@@ -122,7 +121,7 @@ class Rayuela(object):
         for usuario in self.usuarios:
             usuario["nuevo"] = True
             if "dni" in usuario.keys():
-                #contraseña del usuario:
+                # contraseña del usuario:
 
                 usuario["passwd"] = usuario["fecha-nacimiento"].replace("/", "")
                 if usuario["passwd"] == "": usuario["passwd"] = usuario["dni"]
@@ -146,7 +145,7 @@ class Rayuela(object):
                     usuario["login"] = self.chk_username(login)
                 self.logins[usuario["login"]] = usuario
 
-            else:  #sin nie ni dni, no podemos gestionarlo
+            else:  # sin nie ni dni, no podemos gestionarlo
                 self.usuarios.remove(usuario)
 
 
@@ -171,7 +170,7 @@ class Rayuela(object):
                         dato = ' '
                 if info.nodeName == 'nie':
                     usuario["dni"] = self.asegura_codigos(dato)
-                elif info.nodeName == 'grupo':  #no paso asegura_codigos para no quitar el "."
+                elif info.nodeName == 'grupo':  # no paso asegura_codigos para no quitar el "."
                     nombre_grupo = self.asegura_codigos(dato).replace(" ", "")
                     if len(nombre_grupo) > 0:
                         usuario['grupo'] = nombre_grupo
@@ -236,25 +235,36 @@ class Rayuela(object):
 
     def usuarios_grupo(self, grupo):
         import csv
-        myfile = open('salida.csv', 'wb')
+
+        myfile = open('salida_%s.csv' % grupo, 'wb')
         wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
         wr.writerow("First Name,Last Name,Email Address,Password".split(","))
         for usuario in self.aulas[grupo]:
-            datos=self.logins[usuario]
+            datos = self.logins[usuario]
             surname = datos['primer-apellido'] + ' ' + datos['segundo-apellido']
-            wr.writerow([datos['nombre'],surname,"%s@santiagoapostol.net" % datos['login'],datos['passwd']])
+            wr.writerow([datos['nombre'], surname, "%s@santiagoapostol.net" % datos['login'], datos['passwd']])
 
 
 if __name__ == '__main__':
-    archivo = sys.argv[1]
+
+    completo = sys.argv[1] == '-a'
+    if completo:
+        archivo = sys.argv[2]
+    else:
+        archivo = sys.argv[1]
     rayuela = Rayuela(archivo)
     todos = rayuela.gestiona_archivo()
 
-    print "Esta es la lista de grupos, escribe el que deseas generar:"
-    print todos[1].keys()
-    grupo = raw_input()
-    if grupo not in todos[1]:
-        print "error en el nombre del grupo"
-        sys.exit(1)
+    if completo:
+        for grupo in todos[1].keys():
+            print ('Generando archivo: salida_%s.csv' % grupo)
+            rayuela.usuarios_grupo(grupo)
     else:
-        rayuela.usuarios_grupo(grupo)
+        print "Esta es la lista de grupos, escribe el que deseas generar:"
+        print todos[1].keys()
+        grupo = raw_input()
+        if grupo not in todos[1]:
+            print "error en el nombre del grupo"
+            sys.exit(1)
+        else:
+            rayuela.usuarios_grupo(grupo)
