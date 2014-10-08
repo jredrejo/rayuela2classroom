@@ -13,7 +13,7 @@ INSTRUCCIONES:
     Rayuela2CSV.py *[-a]* ruta_al_archivo_Alumnos.xml
 
   - Si se añade el argumento opcional **-a**, p. ej.
-        ```Nix
+        ```bash
         ./Rayuela2CSV.py -a /tmp/Alumnos.xml
         ```
         el programa generará un archivo csv, con el nombre salida_NombreGrupo.csv por cada uno de los grupos que haya en el fichero de Alumnos.
