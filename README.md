@@ -9,12 +9,13 @@ INSTRUCCIONES:
 - Obtener de Rayuela el archivo de exportación de los alumnos que se usa para darlos de alta en el servidor del centro.
 - Si es un archivo zip, extraer el archivo Alumnos.xml que está dentro de este archivo.
 - Sintáxis:
-    ```Nix
-    Rayuela2CSV.py *[-a]* ruta_al_archivo_Alumnos.xml```
+
+    Rayuela2CSV.py *[-a]* ruta_al_archivo_Alumnos.xml
 
   - Si se añade el argumento opcional **-a**, p. ej.
         ```Nix
-        ./Rayuela2CSV.py -a /tmp/Alumnos.xml```
+        ./Rayuela2CSV.py -a /tmp/Alumnos.xml
+        ```
         el programa generará un archivo csv, con el nombre salida_NombreGrupo.csv por cada uno de los grupos que haya en el fichero de Alumnos.
 
   - Si no se usa el argumento *-a*, el programa mostrará la lista de grupos disponibles y solicita que se introduzca el nombre del grupo del que se desea dar de alta a los alumnos.
